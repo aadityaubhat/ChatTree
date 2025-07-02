@@ -110,16 +110,19 @@ function App() {
   const [newMessage, setNewMessage] = useState('');
   const [showRawMessages, setShowRawMessages] = useState(false);
   const [showTreeView, setShowTreeView] = useState(false);
+  const [isBotReplying, setIsBotReplying] = useState(false);
   const chatWindowRef = useRef(null);
 
   useEffect(() => {
-    if (chatWindowRef.current) {
+    if (isBotReplying && chatWindowRef.current) {
       chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight;
     }
-  }, [threads, currentThreadIndex]);
+  }, [threads, isBotReplying]);
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === '') return;
+
+    setIsBotReplying(true);
 
     const userMessage = { role: 'user', content: newMessage, id: crypto.randomUUID() };
     const messagesForApi = [...threads[currentThreadIndex], userMessage];
@@ -145,6 +148,8 @@ function App() {
         });
       });
     });
+
+    setIsBotReplying(false);
   };
 
   const handleInlineEditChange = (content, messageIndex) => {
@@ -158,6 +163,8 @@ function App() {
   };
 
   const handleInlineSend = async (messageIndex) => {
+    setIsBotReplying(true);
+
     const currentThread = threads[currentThreadIndex];
     const userMessage = currentThread[messageIndex];
     const updatedUserMessage = { ...userMessage, isEditing: false };
@@ -185,6 +192,8 @@ function App() {
         });
       });
     });
+
+    setIsBotReplying(false);
   };
 
   const getSiblingBranches = (messageIndex) => {

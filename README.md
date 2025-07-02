@@ -1,14 +1,13 @@
 # 🌳 ChatTree
 
-**ChatTree** is a proof-of-concept (POC) chat interface that enables **non-linear conversations** — allowing users to branch off and explore alternate threads from any user message. It reimagines how we interact with AI by letting conversations evolve as a tree rather than a straight line.
+**ChatTree** is a proof-of-concept (POC) chat interface that enables **non-linear conversations** — allowing users to branch off and explore alternate threads from any user message. It reimagines how we interact with AI by letting conversations evolve as a tree rather than a thread.
 
-> Instead of a single linear chat thread, you get a **conversation tree** — ideal for step-by-step workflows, debugging, ideation, or process navigation.
-
+Instead of a single linear chat thread, you get a **conversation tree** — ideal for managing context.
 ---
 
 ## 🧠 Why ChatTree?
 
-This POC explores a fundamental limitation in traditional chat UIs: they are linear. But real-world thought processes aren't.
+This POC explores a fundamental limitation in traditional chats: they are linear. But real-world thought processes aren't.
 
 Users often need to:
 - Ask multiple follow-ups about the same step
@@ -52,6 +51,10 @@ This aligns with Karpathy's philosophy that **curating the right context window*
 ## 📸 Demo Example
 
 <Add gif>
+
+[![Watch the video](/chattree_demo.png)](https://youtu.be/OfGPAeIrEAM)
+
+
 
 ---
 
