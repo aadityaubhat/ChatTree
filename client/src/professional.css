@@ -1,0 +1,326 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root {
+    --background-color: #f7f7f8;
+    --container-bg: #ffffff;
+    --user-message-bg: #007bff;
+    --user-message-color: #ffffff;
+    --assistant-message-bg: #f1f0f0;
+    --assistant-message-color: #333333;
+    --border-color: #e0e0e0;
+    --text-color: #202123;
+    --input-bg: #ffffff;
+    --input-border: #cccccc;
+    --button-bg: #007bff;
+    --button-hover-bg: #0056b3;
+    --button-color: #ffffff;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+}
+
+.App {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--container-bg);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+}
+
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--container-bg);
+    flex-shrink: 0;
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.toggle-raw-btn {
+    background-color: transparent;
+    border: 1px solid var(--input-border);
+    color: var(--text-color);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.toggle-raw-btn:hover {
+    background-color: #f3f4f6;
+}
+
+.main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+.chat-window {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.side-panel {
+    flex: 0 0 25%;
+    padding: 1rem 1.5rem;
+    background-color: #fdfdfd;
+    overflow-y: auto;
+    border-left: 1px solid var(--border-color);
+    transition: flex-basis 0.3s ease, padding 0.3s ease;
+}
+
+.side-panel.hidden {
+    flex-basis: 0;
+    padding: 0;
+    overflow: hidden;
+    border: none !important;
+}
+
+.tree-view-container {
+    border-left: none;
+    border-right: 1px solid var(--border-color);
+}
+
+.message {
+    padding: 1rem 1.5rem;
+    border-radius: 18px;
+    max-width: 75%;
+    position: relative;
+    line-height: 1.5;
+}
+
+.message.user {
+    background-color: var(--user-message-bg);
+    color: var(--user-message-color);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+    margin-bottom: 40px;
+}
+
+.message.user .branch-buttons {
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+}
+
+.message.user:hover .branch-buttons {
+    opacity: 1;
+    visibility: visible;
+}
+
+.message.assistant {
+    background-color: var(--assistant-message-bg);
+    color: var(--assistant-message-color);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+}
+
+.message.assistant h1,
+.message.assistant h2,
+.message.assistant h3 {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.message.assistant p {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+}
+
+.message.assistant p:last-child {
+    margin-bottom: 0;
+}
+
+.message.assistant ul,
+.message.assistant ol {
+    padding-left: 1.5rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.branch-buttons {
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--container-bg);
+    padding: 6px;
+    border-radius: 20px;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    border: 1px solid var(--border-color);
+}
+
+.branch-buttons button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    font-size: 16px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+}
+
+.branch-buttons button:hover:not(:disabled) {
+    background-color: #f3f4f6;
+    color: #1f2937;
+}
+
+.branch-buttons button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.branch-buttons .new-branch-btn {
+    margin-left: 4px;
+}
+
+.branch-buttons span {
+    font-size: 13px;
+    font-weight: 500;
+    color: #4b5563;
+    min-width: 40px;
+    text-align: center;
+}
+
+.input-area {
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--container-bg);
+    display: flex;
+    gap: 1rem;
+}
+
+.input-area input,
+.inline-edit-container input {
+    flex-grow: 1;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--input-border);
+    font-size: 1rem;
+    font-family: 'Inter', sans-serif;
+}
+
+.input-area input:focus,
+.inline-edit-container input:focus {
+    outline: none;
+    border-color: var(--button-bg);
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.input-area button,
+.inline-edit-container button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background-color: var(--button-bg);
+    color: var(--button-color);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.input-area button:hover,
+.inline-edit-container button:hover {
+    background-color: var(--button-hover-bg);
+}
+
+.input-area button:disabled,
+.inline-edit-container button:disabled {
+    background-color: #a0a0a0;
+    cursor: not-allowed;
+}
+
+.inline-edit-container {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.raw-messages-container {
+    padding: 1rem 2rem;
+    border-top: 1px solid var(--border-color);
+    background-color: #fdfdfd;
+    max-height: 30%;
+    overflow-y: auto;
+    flex-shrink: 0;
+    border-left: 1px solid var(--border-color);
+    padding-bottom: 0;
+}
+
+.raw-messages-container h2 {
+    margin-top: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.raw-messages-container pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 0.8rem;
+    color: #333;
+    line-height: 1.4;
+}
+
+.mermaid-graph-container svg {
+    display: block;
+    margin: auto;
+    max-width: 100%;
+    height: auto;
+}
+
+.user-node rect {
+    fill: var(--user-message-bg) !important;
+    stroke: var(--user-message-bg) !important;
+    color: var(--user-message-color) !important;
+}
+
+.assistant-node rect {
+    fill: var(--assistant-message-bg) !important;
+    stroke: var(--assistant-message-bg) !important;
+    color: var(--assistant-message-color) !important;
+}
+
+.user-node .nodeLabel,
+.assistant-node .nodeLabel {
+    color: white !important;
+    font-family: 'Inter', sans-serif;
+}
+
+.assistant-node .nodeLabel {
+    color: var(--assistant-message-color) !important;
+}
