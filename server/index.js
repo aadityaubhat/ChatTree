@@ -16,16 +16,31 @@ const openai = new OpenAI({
 app.post('/api/chat', async (req, res) => {
     const { messages } = req.body;
 
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
     try {
-        const response = await openai.chat.completions.create({
+        const stream = await openai.chat.completions.create({
             model: 'gpt-4.1-nano',
             messages: messages,
+            stream: true,
         });
 
-        res.json({ message: response.choices[0].message.content });
+        for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content || '';
+            if (content) {
+                res.write(`data: ${JSON.stringify({ content })}\n\n`);
+            }
+        }
+        res.write('data: [DONE]\n\n');
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Something went wrong' });
+        console.error('Error streaming from OpenAI:', error);
+        res.write(`data: ${JSON.stringify({ error: 'An error occurred.' })}\n\n`);
+        res.status(500);
+    } finally {
+        res.end();
     }
 });
 

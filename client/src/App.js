@@ -55,6 +55,44 @@ const TreeDiagram = ({ mermaidString }) => {
   return <div ref={ref} className="mermaid-graph-container" />;
 };
 
+const fetchStreamedResponse = async (messages, onChunk) => {
+  const response = await fetch('http://localhost:5001/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages }),
+  });
+
+  if (!response.body) return;
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let done = false;
+
+  while (!done) {
+    try {
+      const { value, done: readerDone } = await reader.read();
+      done = readerDone;
+      const chunk = decoder.decode(value, { stream: true });
+      const lines = chunk.split('\n\n').filter(line => line.trim() !== '');
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.substring(6);
+          if (data === '[DONE]') {
+            return;
+          }
+          const parsed = JSON.parse(data);
+          if (parsed.content) {
+            onChunk(parsed.content);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error reading stream:', error);
+      done = true;
+    }
+  }
+};
+
 // Helper to compare message arrays
 const areMessagesEqual = (a, b) => {
   if (a.length !== b.length) return false;
@@ -84,32 +122,29 @@ function App() {
     if (newMessage.trim() === '') return;
 
     const userMessage = { role: 'user', content: newMessage, id: crypto.randomUUID() };
+    const messagesForApi = [...threads[currentThreadIndex], userMessage];
 
-    const updatedThreads = threads.map((thread, index) =>
-      index === currentThreadIndex ? [...thread, userMessage] : thread
-    );
+    const assistantId = crypto.randomUUID();
+    const assistantMessage = { role: 'assistant', content: '', id: assistantId };
 
-    setThreads(updatedThreads);
+    setThreads(prev => prev.map((t, i) =>
+      i === currentThreadIndex ? [...messagesForApi, assistantMessage] : t
+    ));
     setNewMessage('');
 
-    try {
-      const response = await fetch('http://localhost:5001/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ messages: updatedThreads[currentThreadIndex] }),
+    await fetchStreamedResponse(messagesForApi, (chunk) => {
+      setThreads(prev => {
+        return prev.map((thread, i) => {
+          if (i === currentThreadIndex) {
+            const lastMessage = thread[thread.length - 1];
+            if (lastMessage && lastMessage.id === assistantId) {
+              return [...thread.slice(0, -1), { ...lastMessage, content: lastMessage.content + chunk }];
+            }
+          }
+          return thread;
+        });
       });
-
-      const data = await response.json();
-      const botMessage = { role: 'assistant', content: data.message, id: crypto.randomUUID() };
-
-      setThreads(prevThreads => prevThreads.map((thread, index) =>
-        index === currentThreadIndex ? [...thread, botMessage] : thread
-      ));
-    } catch (error) {
-      console.error('Error fetching from API:', error);
-    }
+    });
   };
 
   const handleInlineEditChange = (content, messageIndex) => {
@@ -123,32 +158,33 @@ function App() {
   };
 
   const handleInlineSend = async (messageIndex) => {
-    const finalizedThreads = threads.map((thread, threadIdx) => {
-      if (threadIdx === currentThreadIndex) {
-        const newThread = [...thread];
-        newThread[messageIndex] = { ...newThread[messageIndex], isEditing: false };
-        return newThread;
-      }
-      return thread;
+    const currentThread = threads[currentThreadIndex];
+    const userMessage = currentThread[messageIndex];
+    const updatedUserMessage = { ...userMessage, isEditing: false };
+    const messagesForApi = [...currentThread.slice(0, messageIndex), updatedUserMessage];
+
+    const assistantId = crypto.randomUUID();
+    const assistantMessage = { role: 'assistant', content: '', id: assistantId };
+
+    setThreads(prevThreads => {
+      const newThreads = [...prevThreads];
+      newThreads[currentThreadIndex] = [...messagesForApi, assistantMessage];
+      return newThreads;
     });
-    setThreads(finalizedThreads);
 
-    try {
-      const response = await fetch('http://localhost:5001/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: finalizedThreads[currentThreadIndex] }),
+    await fetchStreamedResponse(messagesForApi, (chunk) => {
+      setThreads(prev => {
+        return prev.map((thread, i) => {
+          if (i === currentThreadIndex) {
+            const lastMessage = thread[thread.length - 1];
+            if (lastMessage && lastMessage.id === assistantId) {
+              return [...thread.slice(0, -1), { ...lastMessage, content: lastMessage.content + chunk }];
+            }
+          }
+          return thread;
+        });
       });
-
-      const data = await response.json();
-      const botMessage = { role: 'assistant', content: data.message, id: crypto.randomUUID() };
-
-      setThreads(prevThreads => prevThreads.map((thread, index) =>
-        index === currentThreadIndex ? [...thread, botMessage] : thread
-      ));
-    } catch (error) {
-      console.error('Error fetching from API:', error);
-    }
+    });
   };
 
   const getSiblingBranches = (messageIndex) => {
